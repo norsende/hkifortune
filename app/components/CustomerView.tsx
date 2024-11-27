@@ -15,13 +15,13 @@ const CustomerView = () => {
     const [buttonText, setButtonText] = useState("Start Listening");
     const [recognizer, setRecognizer] = useState<any>();
 
-
+/*
     useEffect(() => {
         if (authStatus === "unauthenticated") {
             router.push('/login');
         }
     });
-
+*/
     useEffect(() => {
         if (chatState.mode === 'nurse_visit') {
             setButtonText("Start Listening Nurse Visit");

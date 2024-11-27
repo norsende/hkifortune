@@ -24,12 +24,13 @@ const AimoView = () => {
     const [chatHistory, setChatHistory] = useState<Dialog[]>([]);
     const [processing, setProcessing] = useState<string | undefined>(undefined);
 
+    /*
     useEffect(() => {
         if (authStatus === "unauthenticated") {
             router.push('/login');
         }
     });
-
+*/
     useEffect(() => {
         if (chatState.mode === 'aimo_chat' && chatState.customer_comments.length > 0) {
             sayGoodMorning(false);
