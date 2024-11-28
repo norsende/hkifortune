@@ -7,11 +7,12 @@ import authOptions from '../lib/authOptions';
 import { getServerSession } from 'next-auth';
 
 const getNurseVisitReport = async (visit: string): Promise<NurseVisitReport> => {
+    /*
     const session = await getServerSession(authOptions);
     if (!session) {
         throw Error("Unauthorized")
     }
-
+*/
     const chat = getOpenAIClient();
 
     const messages: ChatCompletionMessageParam[] = [];
@@ -34,11 +35,12 @@ const getNurseVisitReport = async (visit: string): Promise<NurseVisitReport> => 
 }
 
 const getNurseMemo = async (chatHistory: any[]): Promise<NurseMemo | undefined> => {
+    /*
     const session = await getServerSession(authOptions);
     if (!session) {
         throw Error("Unauthorized")
     }
-
+*/
     const messages: ChatCompletionMessageParam[] = [];
     messages.push({
         role: 'system', 
@@ -60,11 +62,12 @@ const getNurseMemo = async (chatHistory: any[]): Promise<NurseMemo | undefined> 
 }
 
 const getGoodMorning = async (chatHistory : any[], firstQuery: boolean = false): Promise<string> => {
+    /*
     const session = await getServerSession(authOptions);
     if (!session) {
         throw Error("Unauthorized")
     }
-
+*/
     const chat = getOpenAIClient();
 
     const messages: ChatCompletionMessageParam[] = [];
@@ -106,11 +109,12 @@ const getGoodMorning = async (chatHistory : any[], firstQuery: boolean = false):
 } 
 
 const getSentimentAnalysis = async (chatHistory : any[]): Promise<Analysis> => {
+    /*
     const session = await getServerSession(authOptions);
     if (!session) {
         throw Error("Unauthorized")
     }
-
+*/
     const chat = getOpenAIClient();
 
     const messages: ChatCompletionMessageParam[] = [];
