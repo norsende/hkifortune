@@ -11,12 +11,15 @@ const CombinedView = () => {
   const [recognizer, setRecognizer] = useState<any>();
   const [isThinking, setIsThinking] = useState(false); // Animaation tila
   const [isListening, setIsListening] = useState(false); // Kuuntelun tila
+  const ORACLE_NAME = "Oracle";
+  const USER_NAME = "Futuricean";
+  const MAX_MESSAGE_LENGTH = 1000;
 
   // Puheen syntetisointi
   const sayOutLoud = async (text: string) => {
     const token = await getSpeechToken();
     if (!token) {
-      console.error("Puhesynteesin tokenia ei saatu"); // Diagnostiikka
+      console.error("Puhesynteesin tokenia ei saatu");
       return;
     }
 
@@ -34,19 +37,20 @@ const CombinedView = () => {
         synthesizer.close();
       }
     );
-    addAimoComment(text);
   };
+
 
   // Morning Session aloittaminen
   const onStartMorningSession = async () => {
     const response = await getGoodMorning([], true);
-    sayOutLoud(response);
+    sayOutLoud(response); // Sano vastaus ääneen
     updateChatState({
       customer_comments: [],
-      aimo_comments: [response]
+      aimo_comments: [response], // Lisää vastaus suoraan tilaan
     });
-    setCurrentAction("listening"); // Vaihda toiminto seuraavaan
+    setCurrentAction("listening"); // Vaihda toiminto kuuntelemiseen
   };
+
 
   // Puheentunnistus
   const getSpeechRecognizer = async (): Promise<any> => {
@@ -64,46 +68,66 @@ const CombinedView = () => {
 
   const onStartListening = async () => {
     if (isListening) return; // Estä päällekkäiset kutsut
-    setIsListening(true); // Aseta tila kuuntelevaksi
+    setIsListening(true);
 
     const recognizer = await getSpeechRecognizer();
     recognizer.recognized = async (s: any, e: any) => {
       if (e.result.reason === ResultReason.RecognizedSpeech) {
         const userQuestion = e.result.text;
-        console.log("Käyttäjän kysymys:", userQuestion); // Diagnostiikka
+        if (userQuestion.length > MAX_MESSAGE_LENGTH) {
+          console.warn("Viestin pituus ylittää sallitun rajan.");
+          setIsListening(false);
+          updateChatState({
+            aimo_comments: [...chatState.aimo_comments, "Kysymys on liian pitkä. Yritä uudestaan lyhyemmällä kysymyksellä."],
+          });
+          return;
+        }
         updateChatState({ customer_comments: [...chatState.customer_comments, userQuestion] });
 
-        // Näytä mysteerinen animaatio ennen vastausta
         setIsThinking(true);
+
         setTimeout(async () => {
+          const updatedComments = [...chatState.customer_comments, userQuestion];
+          updateChatState({ customer_comments: updatedComments });
+
+          const response = await getGoodMorning(updatedComments, false);
+          console.log("Botti vastasi:", response);
+
+          sayOutLoud(response); // Sano vastaus ääneen
+          addAimoComment(response); // Lisää vastaus vain kerran
           setIsThinking(false);
-          const response = await getGoodMorning(chatState.customer_comments.concat(userQuestion), false);
-          console.log("Botti vastasi:", response); // Diagnostiikka
-          sayOutLoud(response);
-          addAimoComment(response);
-          setIsListening(false); // Palauta tila kuuntelemattomaksi
+          setIsListening(false);
         }, 5000);
+      } else {
+        console.warn("Puhetta ei tunnistettu.");
+        setIsListening(false); // Vapauta tila
+        updateChatState({
+          aimo_comments: [...chatState.aimo_comments, "En saanut selvää. Yritä uudestaan."],
+        });
       }
     };
 
     await recognizer.recognizeOnceAsync();
     setRecognizer(undefined); // Ei jatkuvaa kuuntelua
-    setCurrentAction("morning_session"); // Vaihda toiminto takaisin Morning Sessioniin
   };
 
+
   const handleButtonClick = async () => {
+    if (isThinking || isListening) return; // Estä toiminto, jos botti jo miettii tai kuuntelee
     if (currentAction === "morning_session") {
-      await onStartMorningSession();
-    } else {
-      await onStartListening();
+      await onStartMorningSession(); // Aloita Morning Session
+    } else if (currentAction === "listening") {
+      await onStartListening(); // Aloita kuuntelu
     }
   };
+
+
 
   // Enter-näppäimen kuuntelu
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === "Enter") {
-        handleButtonClick();
+        handleButtonClick(); // Suorita oikea toiminto
       }
     };
 
@@ -114,7 +138,8 @@ const CombinedView = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, []); // Tyhjä riippuvuuslista, jotta kuuntelija lisätään vain kerran
+  }, [currentAction]); // Kuuntele aina `currentAction`-tilaa
+
 
   return (
     <div className="flex items-center justify-center h-screen bg-black">
@@ -122,7 +147,7 @@ const CombinedView = () => {
       {isThinking ? (
         <div className="flex flex-col items-center">
           <div className="w-20 h-20 border-4 border-t-transparent border-[#e49b3f] rounded-full animate-spin mb-4"></div>
-          <p className="text-[#e49b3f] text-xl">Kristallipallo miettii...</p>
+          <p className="text-[#e49b3f] text-xl animate-pulse">Kristallipallo miettii...</p>
         </div>
       ) : (
         <>
@@ -138,12 +163,21 @@ const CombinedView = () => {
       {/* Kommentit */}
       <div className="absolute bottom-4 left-4 right-4 p-4 bg-[#e49b3f] text-black rounded shadow-lg max-h-1/2 overflow-y-auto">
         {chatState.aimo_comments.map((text, idx) => (
-          <p key={idx} className="m-2 p-2 border-2 border-black">{`Aimo: ${text}`}</p>
+          <p
+            key={idx}
+            className="ml-auto m-2 p-2 border-2 border-yellow-600 bg-yellow-100 text-lg italic rounded-l-xl rounded-r-sm shadow">
+            {`${ORACLE_NAME}: ${text}`}
+          </p>
         ))}
         {chatState.customer_comments.map((text, idx) => (
-          <p key={idx} className="m-2 p-2 border-2 border-black">{`Asiakas: ${text}`}</p>
+          <p
+            key={idx}
+            className="mr-auto m-2 p-2 border-2 border-green-600 bg-green-100 rounded-r-xl rounded-l-sm shadow">
+            {`${USER_NAME}: ${text}`}
+          </p>
         ))}
       </div>
+
     </div>
   );
 };
