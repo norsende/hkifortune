@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useChatContext } from "../context/ChatContext";
 import getSpeechToken from "../actions/speechActions";
 import { getGoodMorning } from "../actions/aimoActions";
@@ -9,6 +9,7 @@ const CombinedView = () => {
   const { chatState, updateChatState, addAimoComment } = useChatContext();
   const [currentAction, setCurrentAction] = useState<"morning_session" | "listening">("morning_session");
   const [recognizer, setRecognizer] = useState<any>();
+  const [isThinking, setIsThinking] = useState(false); // Animaation tila
 
   // Puheen syntetisointi
   const sayOutLoud = async (text: string) => {
@@ -60,10 +61,14 @@ const CombinedView = () => {
         const userQuestion = e.result.text;
         updateChatState({ customer_comments: [...chatState.customer_comments, userQuestion] });
 
-        // Botti vastaa käyttäjän kysymykseen
-        const response = await getGoodMorning(chatState.customer_comments.concat(userQuestion), false);
-        sayOutLoud(response);
-        addAimoComment(response);
+        // Näytä mysteerinen animaatio ennen vastausta
+        setIsThinking(true);
+        setTimeout(async () => {
+          setIsThinking(false);
+          const response = await getGoodMorning(chatState.customer_comments.concat(userQuestion), false);
+          sayOutLoud(response);
+          addAimoComment(response);
+        }, 5000); // 5 sekunnin viive
       }
     };
     await recognizer.recognizeOnceAsync();
@@ -79,22 +84,49 @@ const CombinedView = () => {
     }
   };
 
+  // Enter-näppäimen kuuntelu
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        handleButtonClick(); // Simuloi napin painallusta
+      }
+    };
+
+    // Lisää kuuntelija
+    window.addEventListener("keydown", handleKeyPress);
+
+    // Siivoa kuuntelija komponentin poistuessa
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [currentAction]); // Kuuntelee aina napin nykyistä tilaa
+
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      {/* Yksi iso nappi keskellä ruutua */}
-      <button
-        onClick={handleButtonClick}
-        className="px-12 py-6 bg-blue-500 text-white text-2xl rounded shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-105">
-        {currentAction === "morning_session" ? "Kutsu ennustajaa" : "Aloita kuuntelu"}
-      </button>
+    <div className="flex items-center justify-center h-screen bg-black">
+      {/* Jos botti miettii, näytetään animaatio */}
+      {isThinking ? (
+        <div className="flex flex-col items-center">
+          <div className="w-20 h-20 border-4 border-t-transparent border-e49b3f rounded-full animate-spin mb-4"></div>
+          <p className="text-e49b3f text-xl">Kristallipallo miettii...</p>
+        </div>
+      ) : (
+        <>
+          {/* Yksi iso nappi keskellä ruutua */}
+          <button
+            onClick={handleButtonClick}
+            className="px-12 py-6 bg-e49b3f text-black text-2xl rounded shadow-lg hover:brightness-90 transition-transform transform hover:scale-105">
+            {currentAction === "morning_session" ? "Kutsu ennustajaa" : "Aloita kuuntelu"}
+          </button>
+        </>
+      )}
 
       {/* Kommentit */}
-      <div className="absolute bottom-4 left-4 right-4 p-4 bg-white rounded shadow-lg max-h-1/2 overflow-y-auto">
+      <div className="absolute bottom-4 left-4 right-4 p-4 bg-e49b3f text-black rounded shadow-lg max-h-1/2 overflow-y-auto">
         {chatState.aimo_comments.map((text, idx) => (
-          <p key={idx} className="m-2 p-2 border-2 border-blue-100 bg-green-50">{`Aimo: ${text}`}</p>
+          <p key={idx} className="m-2 p-2 border-2 border-black">{`Aimo: ${text}`}</p>
         ))}
         {chatState.customer_comments.map((text, idx) => (
-          <p key={idx} className="m-2 p-2 border-2 border-blue-100 bg-yellow-50">{`Asiakas: ${text}`}</p>
+          <p key={idx} className="m-2 p-2 border-2 border-black">{`Asiakas: ${text}`}</p>
         ))}
       </div>
     </div>
