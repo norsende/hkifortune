@@ -6,7 +6,7 @@ import { getGoodMorning } from "../actions/aimoActions";
 import { ResultReason } from "microsoft-cognitiveservices-speech-sdk";
 
 const CombinedView = () => {
-  const { chatState, updateChatState, addAimoComment } = useChatContext();
+  const { chatState, updateChatState } = useChatContext();
   const [currentAction, setCurrentAction] = useState<"morning_session" | "listening">("morning_session");
   const [recognizer, setRecognizer] = useState<any>();
 
@@ -32,7 +32,6 @@ const CombinedView = () => {
         synthesizer.close();
       }
     );
-    addAimoComment(text);
   };
 
 
@@ -67,15 +66,9 @@ const CombinedView = () => {
     setIsListening(true);
 
     const recognizer = await getSpeechRecognizer();
-    recognizer.recognized = async (s: any, e: any) => {
+    recognizer.recognized = (s: any, e: any) => {
       if (e.result.reason === ResultReason.RecognizedSpeech) {
-        const userQuestion = e.result.text;
-        updateChatState({ customer_comments: [...chatState.customer_comments, userQuestion] });
-
-        // Botti vastaa käyttäjän kysymykseen
-        const response = await getGoodMorning(chatState.customer_comments.concat(userQuestion), false);
-        sayOutLoud(response);
-        addAimoComment(response);
+        updateChatState({ customer_comments: [...chatState.customer_comments, e.result.text] });
       }
     };
 
