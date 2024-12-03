@@ -37,6 +37,7 @@ const CombinedView = () => {
         synthesizer.close();
       }
     );
+    addAimoComment(text);
   };
 
 
@@ -74,36 +75,12 @@ const CombinedView = () => {
     recognizer.recognized = async (s: any, e: any) => {
       if (e.result.reason === ResultReason.RecognizedSpeech) {
         const userQuestion = e.result.text;
-        if (userQuestion.length > MAX_MESSAGE_LENGTH) {
-          console.warn("Viestin pituus ylittää sallitun rajan.");
-          setIsListening(false);
-          updateChatState({
-            aimo_comments: [...chatState.aimo_comments, "Kysymys on liian pitkä. Yritä uudestaan lyhyemmällä kysymyksellä."],
-          });
-          return;
-        }
         updateChatState({ customer_comments: [...chatState.customer_comments, userQuestion] });
 
-        setIsThinking(true);
-
-        setTimeout(async () => {
-          const updatedComments = [...chatState.customer_comments, userQuestion];
-          updateChatState({ customer_comments: updatedComments });
-
-          const response = await getGoodMorning(updatedComments, false);
-          console.log("Botti vastasi:", response);
-
-          sayOutLoud(response); // Sano vastaus ääneen
-          addAimoComment(response); // Lisää vastaus vain kerran
-          setIsThinking(false);
-          setIsListening(false);
-        }, 5000);
-      } else {
-        console.warn("Puhetta ei tunnistettu.");
-        setIsListening(false); // Vapauta tila
-        updateChatState({
-          aimo_comments: [...chatState.aimo_comments, "En saanut selvää. Yritä uudestaan."],
-        });
+        // Botti vastaa käyttäjän kysymykseen
+        const response = await getGoodMorning(chatState.customer_comments.concat(userQuestion), false);
+        sayOutLoud(response);
+        addAimoComment(response);
       }
     };
 
