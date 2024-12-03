@@ -11,7 +11,7 @@ import AnalysisDialog from "./AnalysisDialog";
 import { useChatContext } from "../context/ChatContext";
 import NurseVisitMemoDialog from "./NurseVisitReportDialog";
 import ProcessingDialog from "./ProcessingDialog";
-
+import CrystalBallSpinner from "./CrystalBallSpinner";
 
 const AimoView = () => {
     const { status: authStatus } = useSession();
@@ -23,6 +23,8 @@ const AimoView = () => {
     const [nurseVisitText, setNurseVisitText] = useState("Start Nurse Visit");
     const [chatHistory, setChatHistory] = useState<Dialog[]>([]);
     const [processing, setProcessing] = useState<string | undefined>(undefined);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showSpinner, setShowSpinner] = useState(false);
 
     /*
     useEffect(() => {
@@ -38,9 +40,17 @@ const AimoView = () => {
     }, [chatState.customer_comments])
 
     const sayGoodMorning = async (firstQuery: boolean) => {
+        setShowSpinner(true);
         setAnalysis(undefined);
-        var nextComment = await getGoodMorning(createChatHistory(), firstQuery);
-        sayOutLoud(nextComment);
+        //var nextComment = await getGoodMorning(createChatHistory(), firstQuery);
+        var nextComment = await new Promise((resolve) =>
+            setTimeout(async () => {
+                const response = await getGoodMorning(createChatHistory(), firstQuery);
+                resolve(response);
+            }, 1) // 0.001 sekunnin odotus
+        );
+        setShowSpinner(false);
+        sayOutLoud(nextComment as string);
     }
 
     const createChatHistory = (): Dialog[] => {
@@ -81,14 +91,19 @@ const AimoView = () => {
         //updateChatState({ aimo_comments: aimoComments });
     }
 
-    const onStartMorningSession = () => {
-        setChatHistory(createChatHistory());
-        updateChatState({
-            customer_comments: [],
-            aimo_comments: []
-        });
+    const onStartMorningSession = async () => {
+        setIsProcessing(true);
+        try {
+            setChatHistory(createChatHistory());
+            updateChatState({
+                customer_comments: [],
+                aimo_comments: []
+            });
+            await sayGoodMorning(true);
+        } finally {
+            setIsProcessing(false);
+        }
 
-        sayGoodMorning(true);
     };
 
     const onCreateAnalysis = async () => {
@@ -145,6 +160,7 @@ const AimoView = () => {
 
     return (
         <>
+            {showSpinner && <CrystalBallSpinner />}
             {processing && <ProcessingDialog process={processing}></ProcessingDialog>}
             {nurseMemo && <NurseMemoDialog nurseMemo={nurseMemo} onClose={onNurseMemoClosed}></NurseMemoDialog>}
             {analysis && <AnalysisDialog analysis={analysis} onClose={onAnalysisClosed}></AnalysisDialog>}
@@ -152,31 +168,16 @@ const AimoView = () => {
             <div className="relative max-h-screen overflow-y-auto pb-20">
                 <button
                     onClick={onStartMorningSession}
-                    className="fixed right-4 z-10 bg-blue-500 text-white p-2 rounded top-1"
+                    className={`fixed right-4 z-10 ${
+                        isProcessing ? "bg-gray-400" : "bg-[#e49b3f]"
+                    } text-black shadow-lg p-2 rounded top-1`}
                 >
-                    Start New Morning Session
+                    {isProcessing ? "Summoning..." : "Summon the Oracle"}
                 </button>
-                <button
-                    onClick={onCreateNurseMemo}
-                    className="fixed right-4 z-10 bg-blue-500 text-white p-2 rounded top-12"
-                >
-                    Create Nurse Memo
-                </button>
-                <button
-                    onClick={onStartNurseVisit}
-                    className="fixed right-4 z-10 bg-blue-500 text-white p-2 rounded top-24"
-                >
-                    {nurseVisitText}
-                </button>
-                <button
-                    onClick={onCreateAnalysis}
-                    className="fixed bottom-4 right-4 z-10 bg-blue-500 text-white p-2 rounded"
-                >
-                    Create Analysis
-                </button>
+                
                 <div className="p-4">
                     {chatState?.aimo_comments.map((text: string, idx: number) => (
-                        <p key={idx} className="m-4 mr-40 p-4 border-2 border-blue-100 bg-green-50">
+                        <p key={idx} className="m-4 mr-40 p-4 border-1 italic bg-[#e49b3f] text-black shadow-lg">
                             {text}
                         </p>
                     ))}

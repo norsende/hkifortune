@@ -89,23 +89,23 @@ const CustomerView = () => {
         <div className="relative max-h-screen overflow-y-auto pb-20">
             <button
                 onClick={onStartButtonClicked}
-                className="fixed top-1 left-4 z-10 bg-blue-500 text-white p-2 rounded">
+                className="fixed top-1 left-4 z-10 bg-[#e49b3f] text-black rounded shadow-lg p-2 rounded">
                 {buttonText}
             </button>
             <div className="p-4">
                 {chatState.customer_comments.map((text: string, idx: number) => (
-                    <p key={idx} className="m-4 p-4 border-2 border-blue-100 bg-green-50">
+                    <p key={idx} className="m-4 p-4 border-1 bg-[#e49b3f] text-black shadow-lg">
                         {text}
                     </p>
                 ))}
             </div>
             {isListening && (
                 <div className="fixed inset-0 flex items-center justify-center z-20 bg-black bg-opacity-50">
-                    <div className="bg-white p-8 rounded shadow-lg">
-                        <h2 className="text-xl mb-4">Listening...</h2>
+                    <div className="bg-wh   ite p-8 rounded shadow-lg">
+                        <h2 className="text-xl p-4 bg-[#e49b3f] rounded shadow-lg text-mb-4">Listening...</h2>
                         {chatState.mode === 'nurse_visit' && (
                             <button
-                                className="z-10 bg-blue-500 text-white p-2 rounded"
+                                className="z-10 bg-[#e49b3f] text-black rounded shadow-lg"
                                 onClick={onStopNurseVisitListening}
                             >
                                 Stop listening
