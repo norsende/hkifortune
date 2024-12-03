@@ -10,22 +10,27 @@ const CombinedView = () => {
   const [currentAction, setCurrentAction] = useState<"morning_session" | "listening">("morning_session");
   const [recognizer, setRecognizer] = useState<any>();
   const [isThinking, setIsThinking] = useState(false); // Animaation tila
+  const [isListening, setIsListening] = useState(false); // Kuuntelun tila
 
   // Puheen syntetisointi
   const sayOutLoud = async (text: string) => {
     const token = await getSpeechToken();
-    if (!token) return;
+    if (!token) {
+      console.error("Puhesynteesin tokenia ei saatu"); // Diagnostiikka
+      return;
+    }
 
-    const speechsdk = require('microsoft-cognitiveservices-speech-sdk');
+    const speechsdk = require("microsoft-cognitiveservices-speech-sdk");
     const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(token.token, token.region);
-    speechConfig.speechSynthesisVoiceName = "fi-FI-HarriNeural";
+    speechConfig.speechSynthesisVoiceName = "fi-FI-HarriNeural"; // Käytetään aina suomalaista ääntä
+
     const synthesizer = new speechsdk.SpeechSynthesizer(speechConfig, speechsdk.AudioConfig.fromDefaultSpeakerOutput());
 
     synthesizer.speakTextAsync(
       text,
       () => synthesizer.close(),
       (error: any) => {
-        console.error('Speech synthesis error:', error);
+        console.error("Puheen synteesivirhe:", error);
         synthesizer.close();
       }
     );
@@ -46,19 +51,26 @@ const CombinedView = () => {
   // Puheentunnistus
   const getSpeechRecognizer = async (): Promise<any> => {
     const token = await getSpeechToken();
-    if (!token) return;
+    if (!token) {
+      console.error("Puheentunnistuksen tokenia ei saatu");
+      return;
+    }
 
-    const speechsdk = require('microsoft-cognitiveservices-speech-sdk');
+    const speechsdk = require("microsoft-cognitiveservices-speech-sdk");
     const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(token.token, token.region);
-    speechConfig.speechRecognitionLanguage = 'fi-FI';
+    speechConfig.speechRecognitionLanguage = "fi-FI"; // Suomen kieli
     return new speechsdk.SpeechRecognizer(speechConfig, speechsdk.AudioConfig.fromDefaultMicrophoneInput());
   };
 
   const onStartListening = async () => {
+    if (isListening) return; // Estä päällekkäiset kutsut
+    setIsListening(true); // Aseta tila kuuntelevaksi
+
     const recognizer = await getSpeechRecognizer();
     recognizer.recognized = async (s: any, e: any) => {
       if (e.result.reason === ResultReason.RecognizedSpeech) {
         const userQuestion = e.result.text;
+        console.log("Käyttäjän kysymys:", userQuestion); // Diagnostiikka
         updateChatState({ customer_comments: [...chatState.customer_comments, userQuestion] });
 
         // Näytä mysteerinen animaatio ennen vastausta
@@ -66,11 +78,14 @@ const CombinedView = () => {
         setTimeout(async () => {
           setIsThinking(false);
           const response = await getGoodMorning(chatState.customer_comments.concat(userQuestion), false);
+          console.log("Botti vastasi:", response); // Diagnostiikka
           sayOutLoud(response);
           addAimoComment(response);
-        }, 5000); // 5 sekunnin viive
+          setIsListening(false); // Palauta tila kuuntelemattomaksi
+        }, 5000);
       }
     };
+
     await recognizer.recognizeOnceAsync();
     setRecognizer(undefined); // Ei jatkuvaa kuuntelua
     setCurrentAction("morning_session"); // Vaihda toiminto takaisin Morning Sessioniin
@@ -88,18 +103,18 @@ const CombinedView = () => {
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === "Enter") {
-        handleButtonClick(); // Simuloi napin painallusta
+        handleButtonClick();
       }
     };
 
     // Lisää kuuntelija
     window.addEventListener("keydown", handleKeyPress);
 
-    // Siivoa kuuntelija komponentin poistuessa
+    // Siivoa kuuntelija, kun komponentti poistuu
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [currentAction]); // Kuuntelee aina napin nykyistä tilaa
+  }, []); // Tyhjä riippuvuuslista, jotta kuuntelija lisätään vain kerran
 
   return (
     <div className="flex items-center justify-center h-screen bg-black">
