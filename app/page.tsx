@@ -5,7 +5,7 @@ import CombinedView from "./components/CombinedView";
 
 export default function Home() {
   return (
-    <div className="flex w-screen h-screen text-black">
+    <div className="flex items-center justify-center w-screen h-screen bg-gray-100">
       <SessionProvider>
         <ChatStateProvider>
           <CombinedView />
