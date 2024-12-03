@@ -106,22 +106,22 @@ const CombinedView = () => {
       {/* Jos botti miettii, näytetään animaatio */}
       {isThinking ? (
         <div className="flex flex-col items-center">
-          <div className="w-20 h-20 border-4 border-t-transparent border-e49b3f rounded-full animate-spin mb-4"></div>
-          <p className="text-e49b3f text-xl">Kristallipallo miettii...</p>
+          <div className="w-20 h-20 border-4 border-t-transparent border-[#e49b3f] rounded-full animate-spin mb-4"></div>
+          <p className="text-[#e49b3f] text-xl">Kristallipallo miettii...</p>
         </div>
       ) : (
         <>
           {/* Yksi iso nappi keskellä ruutua */}
           <button
             onClick={handleButtonClick}
-            className="px-12 py-6 bg-e49b3f text-black text-2xl rounded shadow-lg hover:brightness-90 transition-transform transform hover:scale-105">
+            className="px-12 py-6 bg-[#e49b3f] text-black text-2xl font-bold rounded shadow-lg hover:brightness-90 transition-transform transform hover:scale-105">
             {currentAction === "morning_session" ? "Kutsu ennustajaa" : "Aloita kuuntelu"}
           </button>
         </>
       )}
 
       {/* Kommentit */}
-      <div className="absolute bottom-4 left-4 right-4 p-4 bg-e49b3f text-black rounded shadow-lg max-h-1/2 overflow-y-auto">
+      <div className="absolute bottom-4 left-4 right-4 p-4 bg-[#e49b3f] text-black rounded shadow-lg max-h-1/2 overflow-y-auto">
         {chatState.aimo_comments.map((text, idx) => (
           <p key={idx} className="m-2 p-2 border-2 border-black">{`Aimo: ${text}`}</p>
         ))}

@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 255, 255, 255; /* Valkoinen teksti */
+  --background-start-rgb: 0, 0, 0; /* Musta tausta */
+  --background-end-rgb: 0, 0, 0;   /* Musta tausta */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -16,12 +16,13 @@
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: gray
-    rgb(var(--background-start-rgb));
+html, body {
+  @apply h-full w-full bg-black text-white;
+  margin: 0;
+  padding: 0;
 }
 
+/* Lisää mahdolliset lisäutilityt */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
