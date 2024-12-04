@@ -10,10 +10,10 @@ export default function Home() {
     <div className="flex w-screen h-screen text-black">
       <SessionProvider>
         <ChatStateProvider>
-          <div className="flex-[1.4] flex justify-center items-center border">
+          <div className="flex-[1.4] flex justify-center items-center border border-[#e49b3f]">
             <CustomerView />
           </div>
-          <div className="flex-[2] flex justify-center items-center border">
+          <div className="flex-[2] flex justify-center items-center border border-[#e49b3f]">
             <AimoView />
           </div>
         </ChatStateProvider>

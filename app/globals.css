@@ -18,6 +18,7 @@
 
 html, body {
   @apply h-full w-full bg-black text-white;
+  background: linear-gradient(to bottom, #000000, #3d2a1e);
   margin: 0;
   padding: 0;
   perspective: 1000px;
