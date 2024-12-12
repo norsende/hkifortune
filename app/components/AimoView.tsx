@@ -19,12 +19,13 @@ const AimoView = () => {
     const [analysis, setAnalysis] = useState<Analysis>();
     const [nurseMemo, setNurseMemo] = useState<NurseMemo | undefined>();
     const [nuseVisitReport, setNurseVisitReport] = useState<NurseVisitReport>();
-    const {chatState, updateChatState, addAimoComment} = useChatContext();
+    const { chatState, updateChatState, addAimoComment, currentLanguage, setCurrentLanguage } = useChatContext();
     const [nurseVisitText, setNurseVisitText] = useState("Start Nurse Visit");
     const [chatHistory, setChatHistory] = useState<Dialog[]>([]);
     const [processing, setProcessing] = useState<string | undefined>(undefined);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSpinner, setShowSpinner] = useState(false);
+   // const [currentLanguage, setCurrentLanguage] = useState<'fi-FI' | 'en-US'>('fi-FI'); // Käytössä oleva kieli
 
     /*
     useEffect(() => {
@@ -35,22 +36,23 @@ const AimoView = () => {
 */
     useEffect(() => {
         if (chatState.mode === 'aimo_chat' && chatState.customer_comments.length > 0) {
-            sayGoodMorning(false);
+            sayGoodMorning(false, currentLanguage);
         }
     }, [chatState.customer_comments])
 
-    const sayGoodMorning = async (firstQuery: boolean) => {
+    const sayGoodMorning = async (firstQuery: boolean, language: 'fi-FI' | 'en-US') => {
         setShowSpinner(true);
         setAnalysis(undefined);
+        setCurrentLanguage(language);
         //var nextComment = await getGoodMorning(createChatHistory(), firstQuery);
         var nextComment = await new Promise((resolve) =>
             setTimeout(async () => {
-                const response = await getGoodMorning(createChatHistory(), firstQuery);
+                const response = await getGoodMorning(createChatHistory(), firstQuery, language);
                 resolve(response);
             }, 1) // 0.001 sekunnin odotus
         );
         setShowSpinner(false);
-        sayOutLoud(nextComment as string);
+        sayOutLoud(nextComment as string, language);
     }
 
     const createChatHistory = (): Dialog[] => {
@@ -65,13 +67,13 @@ const AimoView = () => {
         return dialog;
     };
 
-    const sayOutLoud = async (text: string) => {
+    const sayOutLoud = async (text: string, language: 'fi-FI' | 'en-US') => {
         const token = await getSpeechToken();
         if (!token) return;
 
         const speechsdk = require('microsoft-cognitiveservices-speech-sdk')
         const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(token.token, token.region);
-        speechConfig.speechSynthesisVoiceName = "fi-FI-HarriNeural";
+        speechConfig.speechSynthesisVoiceName = language === 'fi-FI' ? "fi-FI-HarriNeural" : "en-US-GuyNeural";
 
         const audioConfig = speechsdk.AudioConfig.fromDefaultSpeakerOutput();
 
@@ -91,7 +93,7 @@ const AimoView = () => {
         //updateChatState({ aimo_comments: aimoComments });
     }
 
-    const onStartMorningSession = async () => {
+    const onStartMorningSession = async (language: 'fi-FI' | 'en-US') => {
         setIsProcessing(true);
         try {
             setChatHistory(createChatHistory());
@@ -99,82 +101,42 @@ const AimoView = () => {
                 customer_comments: [],
                 aimo_comments: []
             });
-            await sayGoodMorning(true);
+            await sayGoodMorning(true, language);
         } finally {
             setIsProcessing(false);
         }
 
     };
 
-    const onCreateAnalysis = async () => {
-        setProcessing("Creating Analysis");
-        const sentimentAnalysis = await getSentimentAnalysis(createChatHistory());
-        setProcessing(undefined);
-        setAnalysis(sentimentAnalysis);
-    }
-
-    const onCreateNurseMemo = async () => {
-        setProcessing("Creating Nurse Memo");
-        const nurseMemo = await getNurseMemo(createChatHistory());
-        setProcessing(undefined);
-        if (nurseMemo) {
-            setNurseMemo(nurseMemo);
-        }
-    }
-
-    const onNurseMemoClosed = () => {
-        setNurseMemo(undefined);
-    }
-
-    const onAnalysisClosed = () => {
-        setAnalysis(undefined);
-    }
-
-    const onNurseVisitReportClosed = () => {
-        setNurseVisitReport(undefined);
-        updateChatState({
-            mode: 'aimo_chat',
-            customer_comments: [],
-            aimo_comments: []
-        });
-    }
-
-    const onStartNurseVisit = async () => {
-        if (chatState.mode === 'nurse_visit') {
-            sayOutLoud("Hoitajavierailu päättyi");
-            setNurseVisitText("Start Nurse Visit");
-            setProcessing("Creating Nurse Visit Report");
-            const report = await getNurseVisitReport(chatState.customer_comments.join(' '));
-            setProcessing(undefined);
-            setNurseVisitReport(report);
-        } else {
-            sayOutLoud("Hoitajavierailu aloitettu");
-            setNurseVisitText("End Nurse Visit");
-            updateChatState({
-                mode: 'nurse_visit',
-                customer_comments: [],
-                aimo_comments: []
-            });    
-        }
-    }
-
     return (
         <>
             {showSpinner && <CrystalBallSpinner />}
-            {processing && <ProcessingDialog process={processing}></ProcessingDialog>}
-            {nurseMemo && <NurseMemoDialog nurseMemo={nurseMemo} onClose={onNurseMemoClosed}></NurseMemoDialog>}
-            {analysis && <AnalysisDialog analysis={analysis} onClose={onAnalysisClosed}></AnalysisDialog>}
-            {nuseVisitReport && <NurseVisitMemoDialog visitReport={nuseVisitReport} onClose={onNurseVisitReportClosed}></NurseVisitMemoDialog>}
             <div className="relative max-h-screen overflow-y-auto pb-20">
+                {/* Suomenkielinen nappi */}
                 <button
-                    onClick={onStartMorningSession}
-                    className={`fixed right-4 z-10 ${
-                        isProcessing ? "bg-gray-400" : "bg-[#e49b3f]"
-                    } text-black shadow-lg p-2 rounded top-1`}
+                    onClick={() => {
+                        setCurrentLanguage('fi-FI'); // Päivitetään kontekstin kieliasetus
+                        onStartMorningSession('fi-FI');
+                    }}
+                    className={`fixed right-4 z-10 ${isProcessing && currentLanguage === 'fi-FI' ? 'bg-gray-400' : 'bg-[#e49b3f]'
+                        } text-black shadow-lg p-2 rounded top-1`}
                 >
-                    {isProcessing ? "Summoning..." : "Summon the Oracle"}
+                    {isProcessing && currentLanguage === 'fi-FI' ? 'Kutsutaan...' : 'Kutsu Oraakkeli'}
                 </button>
-                
+
+                <button
+                    onClick={() => {
+                        setCurrentLanguage('en-US'); // Päivitetään kontekstin kieliasetus
+                        onStartMorningSession('en-US');
+                    }}
+                    className={`fixed right-4 z-10 ${isProcessing && currentLanguage === 'en-US' ? 'bg-gray-400' : 'bg-[#e49b3f]'
+                        } text-black shadow-lg p-2 rounded top-16`}
+                >
+                    {isProcessing && currentLanguage === 'en-US' ? 'Summoning...' : 'Summon the Oracle'}
+                </button>
+
+
+                {/* Chat-historian kommentit */}
                 <div className="p-4">
                     {chatState?.aimo_comments.map((text: string, idx: number) => (
                         <p key={idx} className="m-4 mr-40 p-4 border-1 italic bg-[#e49b3f] text-black shadow-lg">
@@ -184,7 +146,7 @@ const AimoView = () => {
                 </div>
             </div>
         </>
-    )
+    );
 };
 
 export default AimoView;

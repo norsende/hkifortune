@@ -14,6 +14,8 @@ export interface ChatContextValue {
     chatState: ChatState;
     updateChatState: (newState: Partial<ChatState>) => void;
     addAimoComment: (comment: string) => void;
+    currentLanguage: 'fi-FI' | 'en-US'; // Lisää tämä
+    setCurrentLanguage: (language: 'fi-FI' | 'en-US') => void; // Lisää tämä
 }
 
 // Initial state
@@ -27,7 +29,9 @@ export const initialState: ChatState = {
 export const ChatContext = createContext<ChatContextValue>({
     chatState: initialState,
     updateChatState: (newState: Partial<ChatState>) => {},
-    addAimoComment: (comment: string) => {}
+    addAimoComment: (comment: string) => {},
+    currentLanguage: 'fi-FI', // Oletuskieli
+    setCurrentLanguage: (language: 'fi-FI' | 'en-US') => {}, // Tyhjä funktio oletuksena
 });
 
 export const useChatContext = () => useContext(ChatContext);

@@ -5,28 +5,28 @@ import getSpeechToken from "../actions/speechActions";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useChatContext } from "../context/ChatContext";
-
+import ReactDOM from 'react-dom';
 
 const CustomerView = () => {
     const { status: authStatus } = useSession();
     const router = useRouter();
     const [isListening, setIsListening] = useState(false);
-    const { chatState, updateChatState } = useChatContext();
+    const { chatState, updateChatState, currentLanguage } = useChatContext();
     const [buttonText, setButtonText] = useState("Start Listening");
     const [recognizer, setRecognizer] = useState<any>();
 
-/*
-    useEffect(() => {
-        if (authStatus === "unauthenticated") {
-            router.push('/login');
-        }
-    });
-*/
+    /*
+        useEffect(() => {
+            if (authStatus === "unauthenticated") {
+                router.push('/login');
+            }
+        });
+    */
     useEffect(() => {
         if (chatState.mode === 'nurse_visit') {
             setButtonText("Start Listening Nurse Visit");
         } else {
-            setButtonText("Start Listening ");
+            setButtonText("Klikkaa tästä vastataksesi / Click here to reply");
         }
     }, [chatState.mode]);
 
@@ -36,7 +36,7 @@ const CustomerView = () => {
 
         const speechsdk = require('microsoft-cognitiveservices-speech-sdk')
         const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(token.token, token.region);
-        speechConfig.speechRecognitionLanguage = 'fi-FI';
+        speechConfig.speechRecognitionLanguage = currentLanguage;
         const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
         return new speechsdk.SpeechRecognizer(speechConfig, audioConfig);
     }
@@ -99,22 +99,25 @@ const CustomerView = () => {
                     </p>
                 ))}
             </div>
-            {isListening && (
-                <div className="fixed inset-0 flex items-center justify-center z-20 bg-black bg-opacity-50">
-                    <div className="bg-wh   ite p-8 rounded shadow-lg">
-                        <h2 className="text-xl p-4 bg-[#e49b3f] rounded shadow-lg text-mb-4">Listening...</h2>
-                        {chatState.mode === 'nurse_visit' && (
-                            <button
-                                className="z-10 bg-[#e49b3f] text-black rounded shadow-lg"
-                                onClick={onStopNurseVisitListening}
-                            >
-                                Stop listening
-                            </button>
-                        )}
-                    </div>
-
-                </div>
-            )}
+            {isListening &&
+                ReactDOM.createPortal(
+                    <div className="fixed inset-0 flex items-center justify-center z-[100] bg-black bg-opacity-50 backdrop-blur-md">
+                        <div className="bg-transparent max-w-md w-full p-8 rounded ">
+                            <h2 className="text-xl text-center bg-[#e49b3f] text-black p-4 rounded shadow-lg">
+                                Kuuntelee... / Listening...
+                            </h2>
+                            {chatState.mode === 'nurse_visit' && (
+                                <button
+                                    className="mt-4 py-2 px-4 bg-[#e49b3f] text-black rounded shadow-lg"
+                                    onClick={onStopNurseVisitListening}
+                                >
+                                    Stop listening
+                                </button>
+                            )}
+                        </div>
+                    </div>,
+                    document.body // Siirretään DOM-puun juureen
+                )}
         </div>
     );
 }

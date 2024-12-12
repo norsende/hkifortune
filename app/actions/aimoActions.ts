@@ -61,7 +61,7 @@ const getNurseMemo = async (chatHistory: any[]): Promise<NurseMemo | undefined> 
     return JSON.parse(gptResult.choices[0].message.content ?? "");
 }
 
-const getGoodMorning = async (chatHistory : any[], firstQuery: boolean = false): Promise<string> => {
+const getGoodMorning = async (chatHistory : any[], firstQuery: boolean = false, language: string): Promise<string> => {
     /*
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -72,16 +72,20 @@ const getGoodMorning = async (chatHistory : any[], firstQuery: boolean = false):
 
     const messages: ChatCompletionMessageParam[] = [];
 
+    const languageInstructions = language === 'fi-FI' 
+        ? "Esittele itsesi suomeksi ja puhu vain suomea. " 
+        : "Introduce yourself in English and speak only English.";
+
     // first message do not refer to earlier comments
     if (firstQuery) {
         messages.push({
             role: 'system', 
-            content: morningSession.instructions
+            content: `${morningSession.instructions} ${languageInstructions}`,
         });
     } else {
         messages.push({
             role: 'system', 
-            content: morningSession.instructions        
+            content: `${morningSession.instructions} ${languageInstructions}`,
         });    
 
         // add chat history
