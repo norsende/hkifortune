@@ -40,8 +40,8 @@ const AimoView = () => {
             // Näytetään restart-nappi fade-animaation jälkeen
             setTimeout(() => {
                 setShowRestartButton(true);
-            }, 10000); // Fade kestää 5 sekuntia
-        }, 25000); // 30 sekuntia ennen fadea
+            }, 10000); // Fade kestää 10 sekuntia
+        }, 35000); // 35 sekuntia ennen fadea
     };
 
     const resetUI = () => {

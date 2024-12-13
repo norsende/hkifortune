@@ -148,5 +148,5 @@ html, body {
   z-index: 90; /* Näytetään kaiken päällä */
   pointer-events: none; /* Ei estä käyttäjän klikkauksia */
   opacity: 0;
-  animation: fadeToBlack 5s forwards; /* Fade-in 5 sekunnissa */
+  animation: fadeToBlack 10s forwards; /* Fade-in 5 sekunnissa */
 }
