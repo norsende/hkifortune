@@ -89,7 +89,7 @@ const CustomerView = () => {
         <div className="relative max-h-screen overflow-y-auto pb-20">
             <button
                 onClick={onStartButtonClicked}
-                className="fixed top-1 left-4 z-10 bg-[#e49b3f] text-black rounded shadow-lg p-2 rounded">
+                className="fixed top-1 left-4 z-10 bg-[#e49b3f] text-black rounded shadow-lg p-8 rounded">
                 {buttonText}
             </button>
             <div className="p-4">

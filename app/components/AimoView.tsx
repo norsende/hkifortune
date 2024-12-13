@@ -168,7 +168,7 @@ const AimoView = () => {
                         onStartMorningSession('fi-FI');
                     }}
                     className={`fixed right-4 z-10 ${isProcessing && currentLanguage === 'fi-FI' ? 'bg-gray-400' : 'bg-[#e49b3f]'
-                        } text-black shadow-lg p-2 rounded top-1`}
+                        } text-black shadow-lg p-8 rounded top-1`}
                 >
                     {isProcessing && currentLanguage === 'fi-FI' ? 'Kutsutaan...' : 'Kutsu Oraakkeli'}
                 </button>
@@ -179,7 +179,7 @@ const AimoView = () => {
                         onStartMorningSession('en-US');
                     }}
                     className={`fixed right-4 z-10 ${isProcessing && currentLanguage === 'en-US' ? 'bg-gray-400' : 'bg-[#e49b3f]'
-                        } text-black shadow-lg p-2 rounded top-16`}
+                        } text-black shadow-lg p-8 rounded top-24`}
                 >
                     {isProcessing && currentLanguage === 'en-US' ? 'Summoning...' : 'Summon the Oracle'}
                 </button>
