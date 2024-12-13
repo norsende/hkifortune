@@ -25,7 +25,28 @@ const AimoView = () => {
     const [processing, setProcessing] = useState<string | undefined>(undefined);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSpinner, setShowSpinner] = useState(false);
-   // const [currentLanguage, setCurrentLanguage] = useState<'fi-FI' | 'en-US'>('fi-FI'); // Käytössä oleva kieli
+    const [isScreenFading, setIsScreenFading] = useState(false);
+    const [showRestartButton, setShowRestartButton] = useState(false);
+
+    // const [currentLanguage, setCurrentLanguage] = useState<'fi-FI' | 'en-US'>('fi-FI'); // Käytössä oleva kieli
+
+    const onQuestionHandled = async (language: 'fi-FI' | 'en-US') => {
+        await sayGoodMorning(false, language); // Oraakkeli vastaa käyttäjän kielellä
+
+        // Fade-to-black ja restart-napin logiikka vain kysymyksen jälkeen
+        setTimeout(() => {
+            setIsScreenFading(true);
+
+            // Näytetään restart-nappi fade-animaation jälkeen
+            setTimeout(() => {
+                setShowRestartButton(true);
+            }, 10000); // Fade kestää 5 sekuntia
+        }, 25000); // 30 sekuntia ennen fadea
+    };
+
+    const resetUI = () => {
+        window.location.reload();
+    };
 
     /*
     useEffect(() => {
@@ -34,12 +55,20 @@ const AimoView = () => {
         }
     });
 */
+
     useEffect(() => {
         if (chatState.mode === 'aimo_chat' && chatState.customer_comments.length > 0) {
-            sayGoodMorning(false, currentLanguage);
+            onQuestionHandled(currentLanguage); // Kutsutaan vain, kun käyttäjä esittää kysymyksen
         }
-    }, [chatState.customer_comments])
+    }, [chatState.customer_comments]);
 
+    /*
+        useEffect(() => {
+            if (chatState.mode === 'aimo_chat' && chatState.customer_comments.length > 0) {
+                sayGoodMorning(false, currentLanguage);
+            }
+        }, [chatState.customer_comments])
+    */
     const sayGoodMorning = async (firstQuery: boolean, language: 'fi-FI' | 'en-US') => {
         setShowSpinner(true);
         setAnalysis(undefined);
@@ -111,6 +140,26 @@ const AimoView = () => {
     return (
         <>
             {showSpinner && <CrystalBallSpinner />}
+            {isScreenFading && <div className="fade-overlay"></div>}
+            {/* Restart-nappi */}
+            {showRestartButton && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center bg-transparent z-[200]"
+                >
+                    <button
+                        onClick={resetUI}
+                        className="bg-[#e49b3f] text-black text-xl shadow-lg p-4 rounded border border-[#e49b3f] max-w-xs"
+                        style={{
+                            width: 'auto', // Napin leveys määräytyy sisällön mukaan
+                            padding: '1rem 2rem', // Lisää sisäistä marginaalia
+                        }}
+                    >
+                        Aloita alusta / Start Again
+                    </button>
+                </div>
+            )}
+
+
             <div className="relative max-h-screen overflow-y-auto pb-20">
                 {/* Suomenkielinen nappi */}
                 <button

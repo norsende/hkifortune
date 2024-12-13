@@ -128,3 +128,25 @@ html, body {
   border-radius: 50%;
   animation: shooting-star linear forwards; /* Animaatio aina käynnissä */
 }
+
+@keyframes fadeToBlack {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  z-index: 90; /* Näytetään kaiken päällä */
+  pointer-events: none; /* Ei estä käyttäjän klikkauksia */
+  opacity: 0;
+  animation: fadeToBlack 5s forwards; /* Fade-in 5 sekunnissa */
+}
